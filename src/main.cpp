@@ -19,31 +19,21 @@ int main()
 
     auto const cube_mesh  = gl::Mesh{{
         .vertex_buffers = {{
-            .layout = {gl::VertexAttribute::Position3D{0 /*Index de l'attribut dans le shader, on en reparle juste après*/}},
+            .layout = {
+                gl::VertexAttribute::Position2D{0},
+                gl::VertexAttribute::UV{1}
+            },
             .data   = {
-                -0.5f, +0.5f, +0.5f,    // Sommet 0
-                +0.5f, +0.5f, +0.5f,    // Sommet 1
-                +0.5f, -0.5f, +0.5f,    // Sommet 2
-                -0.5f, -0.5f, +0.5f,    // Sommet 3
-                -0.5f, +0.5f, -0.5f,    // Sommet 4
-                +0.5f, +0.5f, -0.5f,    // Sommet 5
-                +0.5f, -0.5f, -0.5f,    // Sommet 6
-                -0.5f, -0.5f, -0.5f     // Sommet 7 
+                // Position           // UV
+                -0.5f, -0.5f,         0.0f, 0.0f, // Bas gauche
+                +0.5f, -0.5f,         1.0f, 0.0f, // Bas droite
+                +0.5f, +0.5f,         1.0f, 1.0f, // Haut droite
+                -0.5f, +0.5f,         0.0f, 1.0f  // Haut gauche
             },
         }},
-        .index_buffer = {          
-            0, 3, 2,          
-            0, 1, 2,          
-            0, 4, 7,          
-            0, 3, 7,
-            4, 7, 6,
-            4, 5, 6,
-            5, 6, 2,
-            5, 1, 2,
-            2, 6, 3,
-            3, 7, 6,
-            0, 1, 5,
-            0, 4, 5
+        .index_buffer = {     
+            0, 1, 2,
+            0, 2, 3
         },
     }};  
 
