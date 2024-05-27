@@ -34,20 +34,28 @@ int main()
     auto const cube_mesh  = gl::Mesh{{
         .vertex_buffers = {{
             .layout = {
-                gl::VertexAttribute::Position2D{0},
+                gl::VertexAttribute::Position3D{0},
                 gl::VertexAttribute::UV{1}
             },
             .data   = {
-                // Position           // UV
-                -0.5f, -0.5f,         0.0f, 0.0f, // Bas gauche
-                +0.5f, -0.5f,         1.0f, 0.0f, // Bas droite
-                +0.5f, +0.5f,         1.0f, 1.0f, // Haut droite
-                -0.5f, +0.5f,         0.0f, 1.0f  // Haut gauche
+                // Position                 // UV
+                -0.5f, -0.5f, -0.5f,        0.0f, 0.0f,
+                +0.5f, -0.5f, -0.5f,        1.0f, 0.0f,
+                +0.5f, +0.5f, -0.5f,        1.0f, 1.0f,
+                -0.5f, +0.5f, -0.5f,        0.0f, 1.0f,
+                -0.5f, -0.5f, +0.5f,        0.0f, 0.0f,
+                +0.5f, -0.5f, +0.5f,        1.0f, 0.0f,
+                +0.5f, +0.5f, +0.5f,        1.0f, 1.0f,
+                -0.5f, +0.5f, +0.5f,        0.0f, 1.0f
             },
         }},
         .index_buffer = {     
-            0, 1, 2,
-            0, 2, 3
+            0, 1, 2, 0, 2, 3, // Front face
+            1, 5, 6, 1, 6, 2, // Right face
+            5, 4, 7, 5, 7, 6, // Back face
+            4, 0, 3, 4, 3, 7, // Left face
+            3, 2, 6, 3, 6, 7, // Top face
+            4, 5, 1, 4, 1, 0  // Bottom face
         },
     }};  
 
