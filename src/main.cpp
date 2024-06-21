@@ -7,7 +7,7 @@ int main()
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
 
-    float vignetteAmount = 0.2f;
+    float time = 0.2f;
 
     glEnable(GL_DEPTH_TEST);
 
@@ -139,7 +139,7 @@ int main()
 
         quad_shader.bind();
         quad_shader.set_uniform("screen_texture", render_target.color_texture(0));
-        quad_shader.set_uniform("vignetteAmount", vignetteAmount);
+        quad_shader.set_uniform("time", time);
 
         screen_quad.draw();
     }

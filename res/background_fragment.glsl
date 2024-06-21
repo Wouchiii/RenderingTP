@@ -3,11 +3,10 @@
 in vec2 uv;
 out vec4 out_color;
 uniform sampler2D screen_texture;
-uniform float vignetteAmount; // Contrôle l'intensité du vignettage
+uniform float time;
 
 void main() {
-    vec4 color = texture(screen_texture, uv);
-    float dist = distance(uv, vec2(0.5, 0.5));
-    color.rgb *= smoothstep(0.8, vignetteAmount, dist * (1.0 + vignetteAmount));
+    vec2 uvDistorted = uv + 0.01 * sin(uv.yx * 40.0 + time);
+    vec4 color = texture(screen_texture, uvDistorted);
     out_color = color;
 }
