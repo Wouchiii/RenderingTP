@@ -157,8 +157,13 @@ int main()
             glm::mat4 const view_matrix = camera.view_matrix();
             glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
         
+            glm::mat4 model_matrix = glm::mat4(1.0f);
+            glm::vec3 light_dir = glm::vec3(0.5, 0.5, -0.5);
+        
             shader.bind(); // On a besoin qu'un shader soit bind (i.e. "actif") avant de draw(). On en reparle dans la section d'après.
+            shader.set_uniform("model_matrix", model_matrix);
             shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
+            shader.set_uniform("light_direction", glm::normalize(light_dir));
             shader.set_uniform("my_texture", texture);
 
             cube_mesh.draw(); // C'est ce qu'on appelle un "draw call" : on envoie l'instruction à la carte graphique de dessiner notre mesh.
