@@ -7,6 +7,8 @@ int main()
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
 
+    float contrast = 0.2;
+
     glEnable(GL_DEPTH_TEST);
 
     auto const texture = gl::Texture{
@@ -52,12 +54,12 @@ int main()
     gl::set_events_callbacks({camera.events_callbacks()});
 
     gl::set_events_callbacks({
-    camera.events_callbacks(),
-    {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
-        if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
-            render_target.resize(e.width_in_pixels, e.height_in_pixels);
-    }},
-});
+        camera.events_callbacks(),
+        {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
+            if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
+                render_target.resize(e.width_in_pixels, e.height_in_pixels);
+        }},
+    });
 
     auto const shader = gl::Shader{{
         .vertex   = gl::ShaderSource::File{"res/vertex.glsl"},
@@ -137,6 +139,8 @@ int main()
 
         quad_shader.bind();
         quad_shader.set_uniform("screen_texture", render_target.color_texture(0));
+        quad_shader.set_uniform("contrast", contrast);
+        
 
         screen_quad.draw();
     }
