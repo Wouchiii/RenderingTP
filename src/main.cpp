@@ -7,30 +7,16 @@ int main()
     gl::init("TPs de Rendering"); // On crée une fenêtre et on choisit son nom
     gl::maximize_window(); // On peut la maximiser si on veut
 
-    float time = 0.2f;
-
     glEnable(GL_DEPTH_TEST);
-
-    auto const texture = gl::Texture{
-        gl::TextureSource::File{ // Peut être un fichier, ou directement un tableau de pixels
-            .path           = "res/texture.png",
-            .flip_y         = true, // Il n'y a pas de convention universelle sur la direction de l'axe Y. Les fichiers (.png, .jpeg) utilisent souvent une direction différente de celle attendue par OpenGL. Ce booléen flip_y est là pour inverser la texture si jamais elle n'apparaît pas dans le bon sens.
-            .texture_format = gl::InternalFormat::RGBA8, // Format dans lequel la texture sera stockée. On pourrait par exemple utiliser RGBA16 si on voulait 16 bits par canal de couleur au lieu de 8. (Mais ça ne sert à rien dans notre cas car notre fichier ne contient que 8 bits par canal, donc on ne gagnerait pas de précision). On pourrait aussi stocker en RGB8 si on ne voulait pas de canal alpha. On utilise aussi parfois des textures avec un seul canal (R8) pour des usages spécifiques.
-        },
-        gl::TextureOptions{
-            .minification_filter  = gl::Filter::Linear, // Comment on va moyenner les pixels quand on voit l'image de loin ?
-            .magnification_filter = gl::Filter::Linear, // Comment on va interpoler entre les pixels quand on zoom dans l'image ?
-            .wrap_x               = gl::Wrap::Repeat,   // Quelle couleur va-t-on lire si jamais on essaye de lire en dehors de la texture ?
-            .wrap_y               = gl::Wrap::Repeat,   // Idem, mais sur l'axe Y. En général on met le même wrap mode sur les deux axes.
-        }
-    };
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE); // On peut configurer l'équation qui mélange deux couleurs, comme pour faire différents blend mode dans Photoshop. Cette équation-ci donne le blending "normal" entre pixels transparents.
 
     auto render_target = gl::RenderTarget{gl::RenderTarget_Descriptor{
         .width          = gl::framebuffer_width_in_pixels(),
         .height         = gl::framebuffer_height_in_pixels(),
         .color_textures = {
             gl::ColorAttachment_Descriptor{
-                .format  = gl::InternalFormat_Color::RGBA8,
+                .format  = gl::InternalFormat_Color::RGBA32F,
                 .options = {
                     .minification_filter  = gl::Filter::NearestNeighbour, // On va toujours afficher la texture à la taille de l'écran,
                     .magnification_filter = gl::Filter::NearestNeighbour, // donc les filtres n'auront pas d'effet. Tant qu'à faire on choisit le moins coûteux.
@@ -51,13 +37,9 @@ int main()
     }};
 
     auto camera = gl::Camera{};
-    gl::set_events_callbacks({camera.events_callbacks()});
-
     gl::set_events_callbacks({
-        camera.events_callbacks(),
         {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
-            if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
-                render_target.resize(e.width_in_pixels, e.height_in_pixels);
+            render_target.resize(e.width_in_pixels, e.height_in_pixels);
         }},
     });
 
@@ -66,40 +48,49 @@ int main()
         .fragment = gl::ShaderSource::File{"res/fragment.glsl"},
     }};
 
-    auto const quad_shader = gl::Shader{{
+    auto const background_shader = gl::Shader{{
         .vertex   = gl::ShaderSource::File{"res/background_vertex.glsl"},
         .fragment = gl::ShaderSource::File{"res/background_fragment.glsl"},
     }};
 
-    auto const cube_mesh  = gl::Mesh{{
+    auto const RenderTag_shader = gl::Shader{{
+        .vertex   = gl::ShaderSource::File{"res/RenderTarg_vertex.glsl"},
+        .fragment = gl::ShaderSource::File{"res/RenderTarg_fragment.glsl"},
+    }};
+
+    auto const rectangle_mesh  = gl::Mesh{{
         .vertex_buffers = {{
-            .layout = {
-                gl::VertexAttribute::Position3D{0},
-                gl::VertexAttribute::UV{1}
-            },
+            .layout = {gl::VertexAttribute::Position2D{0 /*Index de l'attribut dans le shader, on en reparle juste après*/}},
             .data   = {
-                // Position                 // UV
-                -0.5f, -0.5f, -0.5f,        0.0f, 0.0f,
-                +0.5f, -0.5f, -0.5f,        1.0f, 0.0f,
-                +0.5f, +0.5f, -0.5f,        1.0f, 1.0f,
-                -0.5f, +0.5f, -0.5f,        0.0f, 1.0f,
-                -0.5f, -0.5f, +0.5f,        0.0f, 0.0f,
-                +0.5f, -0.5f, +0.5f,        1.0f, 0.0f,
-                +0.5f, +0.5f, +0.5f,        1.0f, 1.0f,
-                -0.5f, +0.5f, +0.5f,        0.0f, 1.0f
+                -0.5f, -0.5f, // Position2D du 1er sommet
+                +0.5f, -0.5f, // Position2D du 2ème sommet
+                +0.5f, +0.5f, // Position2D du 3ème sommet
+                -0.5f, +0.5f  // Position2D du 4ème sommet
             },
         }},
-        .index_buffer = {     
-            0, 1, 2, 0, 2, 3, // Front face
-            1, 5, 6, 1, 6, 2, // Right face
-            5, 4, 7, 5, 7, 6, // Back face
-            4, 0, 3, 4, 3, 7, // Left face
-            3, 2, 6, 3, 6, 7, // Top face
-            4, 5, 1, 4, 1, 0  // Bottom face
+        .index_buffer = {
+            0, 1, 2, // Indices du premier triangle : on utilise le 1er, 2ème et 3ème sommet
+            0, 2, 3  // Indices du deuxième triangle : on utilise le 1er, 3ème et 4ème sommet
         },
-    }};  
+    }}; 
 
-    auto const screen_quad = gl::Mesh{{
+    auto const background_quad = gl::Mesh{{
+        .vertex_buffers = {{
+            .layout = {gl::VertexAttribute::Position2D{0}},
+            .data   = {
+                -1.0f, -1.0f,
+                +1.0f, -1.0f,
+                +1.0f, +1.0f,
+                -1.0f, +1.0f
+            },
+        }},
+        .index_buffer = {
+            0, 1, 2,
+            0, 2, 3
+        },
+    }};
+
+    auto const RenderTag_quad = gl::Mesh{{
         .vertex_buffers = {{
             .layout = {
                 gl::VertexAttribute::Position2D{0}, // Index 0 pour la position
@@ -122,25 +113,21 @@ int main()
     while (gl::window_is_open())
     {
         render_target.render([&]() {
-            glClearColor(1.f, 0.f, 0.f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glm::mat4 const view_matrix = camera.view_matrix();
-            glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
+            glClear(GL_DEPTH_BUFFER_BIT);
         
             shader.bind(); // On a besoin qu'un shader soit bind (i.e. "actif") avant de draw(). On en reparle dans la section d'après.
-            shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
-            shader.set_uniform("my_texture", texture);
+            shader.set_uniform("aspect_ratio", gl::framebuffer_aspect_ratio());
+            shader.set_uniform("time", gl::time_in_seconds());
+            rectangle_mesh.draw(); // C'est ce qu'on appelle un "draw call" : on envoie l'instruction à la carte graphique de dessiner notre mesh.
 
-            cube_mesh.draw(); // C'est ce qu'on appelle un "draw call" : on envoie l'instruction à la carte graphique de dessiner notre mesh.
+            background_shader.bind();
+            background_quad.draw();
         });
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        quad_shader.bind();
-        quad_shader.set_uniform("screen_texture", render_target.color_texture(0));
-        quad_shader.set_uniform("time", time);
-
-        screen_quad.draw();
+        RenderTag_shader.bind();
+        RenderTag_shader.set_uniform("screen_texture", render_target.color_texture(0));
+        RenderTag_quad.draw();
     }
 }
