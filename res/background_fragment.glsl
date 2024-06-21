@@ -1,7 +1,9 @@
 #version 410
 
+in vec2 uv;
 out vec4 out_color;
+uniform sampler2D screen_texture;
 
 void main() {
-    out_color = vec4(0.0, 0.0, 1.0, 0.005f); // Noir semi-transparent
+    out_color = texture(screen_texture, uv);
 }
