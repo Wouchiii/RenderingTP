@@ -52,11 +52,12 @@ int main()
     gl::set_events_callbacks({camera.events_callbacks()});
 
     gl::set_events_callbacks({
-        camera.events_callbacks(),
-        {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
+    camera.events_callbacks(),
+    {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
+        if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
             render_target.resize(e.width_in_pixels, e.height_in_pixels);
-        }},
-    });
+    }},
+});
 
     auto const shader = gl::Shader{{
         .vertex   = gl::ShaderSource::File{"res/vertex.glsl"},
@@ -132,8 +133,10 @@ int main()
             cube_mesh.draw(); // C'est ce qu'on appelle un "draw call" : on envoie l'instruction à la carte graphique de dessiner notre mesh.
         });
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         quad_shader.bind();
-        quad_shader.set_uniform("screen_texture", );
+        quad_shader.set_uniform("screen_texture", render_target.color_texture(0));
 
         screen_quad.draw();
     }
