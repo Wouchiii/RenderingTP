@@ -151,7 +151,7 @@ int main()
     while (gl::window_is_open())
     {
         render_target.render([&]() {
-            glClearColor(1.f, 0.f, 0.f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
+            glClearColor(0.75f, 0.75f, 0.75f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glm::mat4 const view_matrix = camera.view_matrix();
@@ -164,6 +164,7 @@ int main()
             shader.set_uniform("model_matrix", model_matrix);
             shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
             shader.set_uniform("light_direction", glm::normalize(light_dir));
+            shader.set_uniform("ambient_strength", 0.3f);
             shader.set_uniform("my_texture", texture);
 
             cube_mesh.draw(); // C'est ce qu'on appelle un "draw call" : on envoie l'instruction à la carte graphique de dessiner notre mesh.
