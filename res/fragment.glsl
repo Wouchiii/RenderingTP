@@ -2,20 +2,33 @@
 
 in vec2 uv;
 in vec3 normal;
+in vec3 fragPosition;
 out vec4 out_color;
 
 uniform sampler2D my_texture;
+uniform vec3 light_position;
+uniform vec3 light_intensity;
 uniform vec3 light_direction;
-uniform float ambient_strength = 0.3;
+uniform float directional_light_intensity;
+uniform float ambient_strength;
 
 void main()
 {
     vec3 norm = normalize(normal);
     vec3 lightDir = normalize(light_direction);
-    float diff = max(dot(norm, lightDir), 0.0);
-    float intensity = diff + ambient_strength;
-    vec4 texture_color = texture(my_texture, uv);
-    texture_color.rgb *= intensity;
+    float diff = max(dot(norm, lightDir), 0.0) * directional_light_intensity;
 
-    out_color = texture_color;
+    vec3 pointLightDir = normalize(light_position - fragPosition);
+    float distance = length(light_position - fragPosition);
+    float pointDiff = max(dot(norm, pointLightDir), 0.0) / (distance * distance);
+
+    // Appliquer l'intensité de la lumière ponctuelle à la contribution de la lumière ponctuelle
+    vec3 pointLightEffect = pointDiff * light_intensity;
+
+    // Combinaison des contributions lumineuses
+    vec3 light = ambient_strength + diff + pointLightEffect;  // Utilisation de la somme des contributions lumineuses
+
+    vec4 texture_color = texture(my_texture, uv);
+    vec3 finalColor = light * texture_color.rgb;  // Multiplier par la couleur de la texture
+    out_color = vec4(finalColor, texture_color.a);
 }

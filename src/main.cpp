@@ -163,7 +163,10 @@ int main()
             shader.bind(); // On a besoin qu'un shader soit bind (i.e. "actif") avant de draw(). On en reparle dans la section d'après.
             shader.set_uniform("model_matrix", model_matrix);
             shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
+            shader.set_uniform("light_position", glm::vec3(2.0, 0.0, 0.0));
+            shader.set_uniform("light_intensity", glm::vec3(1.0, 1.0, 1.0));
             shader.set_uniform("light_direction", glm::normalize(light_dir));
+            shader.set_uniform("directional_light_intensity", 0.0f);
             shader.set_uniform("ambient_strength", 0.3f);
             shader.set_uniform("my_texture", texture);
 
