@@ -22,11 +22,14 @@ void main()
     float distance = length(light_position - fragPosition);
     float pointDiff = max(dot(norm, pointLightDir), 0.0) / (distance * distance);
 
-    // Appliquer l'intensité de la lumière ponctuelle à la contribution de la lumière ponctuelle
-    vec3 pointLightEffect = pointDiff * light_intensity;
+    vec3 ambientColor = vec3(0.0, 0.0, 1.0);  // Bleu pour la lumière ambiante
+    vec3 pointLightColor = vec3(1.0, 0.0, 0.0);  // Rouge pour la lumière ponctuelle
+
+    vec3 pointLightEffect = pointDiff * light_intensity * pointLightColor;
+    vec3 ambientEffect = ambient_strength * ambientColor;
 
     // Combinaison des contributions lumineuses
-    vec3 light = ambient_strength + diff + pointLightEffect;  // Utilisation de la somme des contributions lumineuses
+    vec3 light = ambientEffect + diff * pointLightColor + pointLightEffect;  // Utilisation de la somme des contributions lumineuses
 
     vec4 texture_color = texture(my_texture, uv);
     vec3 finalColor = light * texture_color.rgb;  // Multiplier par la couleur de la texture
