@@ -100,12 +100,12 @@ int main()
     gl::set_events_callbacks({camera.events_callbacks()});
 
     gl::set_events_callbacks({
-    camera.events_callbacks(),
-    {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
-        if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
-            render_target.resize(e.width_in_pixels, e.height_in_pixels);
-    }},
-});
+        camera.events_callbacks(),
+        {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
+            if(e.width_in_pixels != 0 && e.height_in_pixels != 0) // OpenGL crash si on tente de faire une render target avec une taille de 0
+                render_target.resize(e.width_in_pixels, e.height_in_pixels);
+        }},
+    });
 
     auto const shader = gl::Shader{{
         .vertex   = gl::ShaderSource::File{"res/vertex.glsl"},
@@ -148,6 +148,8 @@ int main()
         },
     }};
 
+    float rotationAngle = 0.0f;
+
     while (gl::window_is_open())
     {
         render_target.render([&]() {
@@ -157,16 +159,19 @@ int main()
             glm::mat4 const view_matrix = camera.view_matrix();
             glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
         
-            glm::mat4 model_matrix = glm::mat4(1.0f);
-            glm::vec3 light_dir = glm::vec3(0.5, 0.5, -0.5);
+            rotationAngle += 0.01f;
+            glm::mat4 model_matrix = glm::rotate(glm::mat4(1.0f), rotationAngle, glm::vec3(1.0f, 0.0f, 0.0f)); // Rotation autour de l'axe y
+            
+            //glm::mat4 model_matrix = glm::mat4(1.0f);
+            //glm::vec3 light_dir = glm::vec3(0.5, 0.5, -0.5);
         
             shader.bind(); // On a besoin qu'un shader soit bind (i.e. "actif") avant de draw(). On en reparle dans la section d'après.
             shader.set_uniform("model_matrix", model_matrix);
             shader.set_uniform("view_projection_matrix", projection_matrix * view_matrix);
             shader.set_uniform("light_position", glm::vec3(2.0, 0.0, 0.0));
-            shader.set_uniform("light_intensity", glm::vec3(1.0, 1.0, 1.0));
-            shader.set_uniform("light_direction", glm::normalize(light_dir));
-            shader.set_uniform("directional_light_intensity", 0.0f);
+            shader.set_uniform("light_intensity", glm::vec3(0.0, 0.0, 0.0));
+            shader.set_uniform("light_direction", glm::normalize(glm::vec3(0.5, 0.5, -0.5)));
+            shader.set_uniform("directional_light_intensity", 1.0f);
             shader.set_uniform("ambient_strength", 0.3f);
             shader.set_uniform("my_texture", texture);
 
